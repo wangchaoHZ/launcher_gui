@@ -1,0 +1,44 @@
+{
+  "start_interval_seconds": 5,
+  "services": [
+    {
+      "name": "InfluxDB",
+      "cmd": [
+        "D:/IoT/guardian-data-center-deploy/guardian-data-center-deploy-V1.0/influxdb2-2.7.12-windows/influxd.exe"
+      ],
+      "cwd": "D:/IoT/guardian-data-center-deploy/guardian-data-center-deploy-V1.0/influxdb2-2.7.12-windows",
+      "wait": { "type": "port", "value": 8086, "timeout": 60 },
+      "auto_restart": false,
+      "max_restarts": 3,
+      "restart_backoff": 2,
+      "restart_backoff_factor": 1.5,
+      "required_files": []
+    },
+    {
+      "name": "DataCenter",
+      "cmd": [
+        "D:/IoT/guardian-data-center-deploy/guardian-data-center-deploy-V1.0/DataCenterV3.exe"
+      ],
+      "cwd": "D:/IoT/guardian-data-center-deploy/guardian-data-center-deploy-V1.0",
+      "wait": { "type": "port", "value": 8088, "timeout": 60 },
+      "auto_restart": false,
+      "max_restarts": 0,
+      "restart_backoff": 2,
+      "restart_backoff_factor": 1.5,
+      "required_files": ["config.xlsx", "sysconfig.json"]
+    },
+    {
+      "name": "Grafana",
+      "cmd": [
+        "D:/IoT/grafana-12.0.2.windows-amd64/grafana-v12.0.2/bin/grafana-server.exe"
+      ],
+      "cwd": "D:/IoT/grafana-12.0.2.windows-amd64/grafana-v12.0.2/bin",
+      "wait": { "type": "port", "value": 3000, "timeout": 60 },
+      "auto_restart": false,
+      "max_restarts": 0,
+      "restart_backoff": 2,
+      "restart_backoff_factor": 1.5,
+      "required_files": []
+    }
+  ]
+}
