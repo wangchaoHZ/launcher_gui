@@ -157,11 +157,10 @@ class ServiceRuntime:
             self._stop_requested = False
             self.status = STATUS_STARTING
 
-        # 检查必要文件
+        # 必要文件检查（若你已有就保留）
         missing = []
         for rf in self.required_files:
-            fpath = os.path.join(self.cwd, rf)
-            if not os.path.isfile(fpath):
+            if not os.path.isfile(os.path.join(self.cwd, rf)):
                 missing.append(rf)
         if missing:
             with self._lock:
@@ -170,7 +169,18 @@ class ServiceRuntime:
             return
 
         self.log(f"启动命令: {self.cmd}")
+
         try:
+            creationflags = 0
+            startupinfo = None
+            if os.name == "nt":
+                # 隐藏控制台窗口
+                creationflags |= getattr(subprocess, "CREATE_NO_WINDOW", 0)
+                # 双保险：有些情况下再加 STARTUPINFO
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                # startupinfo.wShowWindow = 0  # 可显式设为 SW_HIDE
+
             self.proc = subprocess.Popen(
                 self.cmd,
                 cwd=self.cwd,
@@ -179,6 +189,8 @@ class ServiceRuntime:
                 text=True,
                 bufsize=1,
                 universal_newlines=True,
+                creationflags=creationflags,
+                startupinfo=startupinfo,
             )
             self.log(f"已启动 PID={self.proc.pid}")
         except FileNotFoundError:
@@ -205,7 +217,7 @@ class ServiceRuntime:
                 self.status = STATUS_RUNNING
                 self.log("健康检查通过，运行中。")
             else:
-                if self.status == STATUS_STARTING:  # 仍是 starting，说明未手动 stop
+                if self.status == STATUS_STARTING:
                     self.status = STATUS_FAILED
                 self.log("健康检查失败或进程提前退出，终止。")
                 self._terminate_internal(force=True)
